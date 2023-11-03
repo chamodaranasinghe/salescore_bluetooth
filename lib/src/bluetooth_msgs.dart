@@ -142,19 +142,43 @@ class BmScanResult {
   final BmBluetoothDevice device;
   final BmAdvertisementData advertisementData;
   final int rssi;
+  final bool isPrinter;
+  final BmBondStateEnum bondState;
 
   BmScanResult({
     required this.device,
     required this.advertisementData,
     required this.rssi,
+    required this.isPrinter,
+    required this.bondState,
   });
 
   factory BmScanResult.fromMap(Map<dynamic, dynamic> json) {
+    final bondStateStr = json['bond_state'];
+    BmBondStateEnum bondState = BmBondStateEnum.none;
+    if (bondStateStr != null) {
+      switch (bondStateStr) {
+        case 'none':
+          bondState = BmBondStateEnum.none;
+          break;
+        case 'bonding':
+          bondState = BmBondStateEnum.bonding;
+          break;
+        case 'bonded':
+          bondState = BmBondStateEnum.bonded;
+          break;
+        default:
+          bondState = BmBondStateEnum.none;
+          break;
+      }
+    }
     return BmScanResult(
-      device: BmBluetoothDevice.fromMap(json['device']),
-      advertisementData: BmAdvertisementData.fromMap(json['advertisement_data']),
-      rssi: json['rssi'],
-    );
+        device: BmBluetoothDevice.fromMap(json['device']),
+        advertisementData:
+            BmAdvertisementData.fromMap(json['advertisement_data']),
+        rssi: json['rssi'],
+        isPrinter: json['is_printer'],
+        bondState: bondState);
   }
 }
 
@@ -169,8 +193,10 @@ class BmScanResponse {
 
   factory BmScanResponse.fromMap(Map<dynamic, dynamic> json) {
     return BmScanResponse(
-      result: json['result'] != null ? BmScanResult.fromMap(json['result']) : null,
-      failed: json['failed'] != null ? BmScanFailed.fromMap(json['failed']) : null,
+      result:
+          json['result'] != null ? BmScanResult.fromMap(json['result']) : null,
+      failed:
+          json['failed'] != null ? BmScanFailed.fromMap(json['failed']) : null,
     );
   }
 }
@@ -281,7 +307,9 @@ class BmBluetoothCharacteristic {
     return BmBluetoothCharacteristic(
       remoteId: json['remote_id'],
       serviceUuid: Guid(json['service_uuid']),
-      secondaryServiceUuid: json['secondary_service_uuid'] != null ? Guid(json['secondary_service_uuid']) : null,
+      secondaryServiceUuid: json['secondary_service_uuid'] != null
+          ? Guid(json['secondary_service_uuid'])
+          : null,
       characteristicUuid: Guid(json['characteristic_uuid']),
       descriptors: descs,
       properties: BmCharacteristicProperties.fromMap(json['properties']),
@@ -429,7 +457,9 @@ class BmCharacteristicData {
     return BmCharacteristicData(
       remoteId: json['remote_id'],
       serviceUuid: Guid(json['service_uuid']),
-      secondaryServiceUuid: json['secondary_service_uuid'] != null ? Guid(json['secondary_service_uuid']) : null,
+      secondaryServiceUuid: json['secondary_service_uuid'] != null
+          ? Guid(json['secondary_service_uuid'])
+          : null,
       characteristicUuid: Guid(json['characteristic_uuid']),
       value: _hexDecode(json['value']),
       success: json['success'] != 0,
@@ -531,7 +561,6 @@ class BmWriteDescriptorRequest {
   }
 }
 
-
 class BmDescriptorData {
   final String remoteId;
   final Guid serviceUuid;
@@ -559,7 +588,9 @@ class BmDescriptorData {
     return BmDescriptorData(
       remoteId: json['remote_id'],
       serviceUuid: Guid(json['service_uuid']),
-      secondaryServiceUuid: json['secondary_service_uuid'] != null ? Guid(json['secondary_service_uuid']) : null,
+      secondaryServiceUuid: json['secondary_service_uuid'] != null
+          ? Guid(json['secondary_service_uuid'])
+          : null,
       characteristicUuid: Guid(json['characteristic_uuid']),
       descriptorUuid: Guid(json['descriptor_uuid']),
       value: _hexDecode(json['value']),
@@ -617,7 +648,8 @@ class BmConnectionStateResponse {
   factory BmConnectionStateResponse.fromMap(Map<dynamic, dynamic> json) {
     return BmConnectionStateResponse(
       remoteId: json['remote_id'],
-      connectionState: BmConnectionStateEnum.values[json['connection_state'] as int],
+      connectionState:
+          BmConnectionStateEnum.values[json['connection_state'] as int],
       disconnectReasonCode: json['disconnect_reason_code'],
       disconnectReasonString: json['disconnect_reason_string'],
     );
@@ -781,7 +813,9 @@ class BmBondStateResponse {
     return BmBondStateResponse(
       remoteId: json['remote_id'],
       bondState: BmBondStateEnum.values[json['bond_state']],
-      prevState: json['prev_state'] != null ? BmBondStateEnum.values[json['prev_state']] : null,
+      prevState: json['prev_state'] != null
+          ? BmBondStateEnum.values[json['prev_state']]
+          : null,
     );
   }
 }

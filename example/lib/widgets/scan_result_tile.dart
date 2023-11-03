@@ -77,6 +77,7 @@ class _ScanResultTileState extends State<ScanResultTile> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          if (widget.result.isPrinter) Icon(Icons.print_rounded),
           Text(
             widget.result.device.platformName,
             overflow: TextOverflow.ellipsis,
@@ -84,7 +85,11 @@ class _ScanResultTileState extends State<ScanResultTile> {
           Text(
             widget.result.device.remoteId.toString(),
             style: Theme.of(context).textTheme.bodySmall,
-          )
+          ),
+          Text(
+            widget.result.bondState.name,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       );
     } else {

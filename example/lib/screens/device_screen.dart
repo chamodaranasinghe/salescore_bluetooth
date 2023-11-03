@@ -25,9 +25,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
   List<BluetoothService> _services = [];
   bool _isDiscoveringServices = false;
   bool _isConnectingOrDisconnecting = false;
+  BluetoothBondState _bondState = BluetoothBondState.none;
 
   late StreamSubscription<BluetoothConnectionState>
       _connectionStateSubscription;
+  late StreamSubscription<BluetoothBondState> _bondStateSubscription;
   late StreamSubscription<bool> _isConnectingOrDisconnectingSubscription;
   late StreamSubscription<int> _mtuSubscription;
 
@@ -35,11 +37,20 @@ class _DeviceScreenState extends State<DeviceScreen> {
   void initState() {
     super.initState();
 
+    _bondStateSubscription = widget.device.bondState.listen((state) {
+      setState(() {
+        _bondState = state;
+      });
+      Snackbar.show(
+          ABC.c, "Bond: " + state.toString() + widget.device.remoteId.str,
+          success: true);
+    });
+    return;
+
     _connectionStateSubscription =
         widget.device.connectionState.listen((state) async {
       _connectionState = state;
       if (state == BluetoothConnectionState.connected) {
-        widget.device.createBond();
         _services = []; // must rediscover services
       }
       if (state == BluetoothConnectionState.connected && _rssi == null) {
@@ -64,6 +75,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
   void dispose() {
     _connectionStateSubscription.cancel();
     _mtuSubscription.cancel();
+    _bondStateSubscription.cancel();
     _isConnectingOrDisconnectingSubscription.cancel();
     super.dispose();
   }
@@ -224,6 +236,27 @@ class _DeviceScreenState extends State<DeviceScreen> {
     }
   }
 
+  Widget buildBondAndUnBondButton() {
+    if (_bondState == BluetoothBondState.bonded) {
+      return ElevatedButton(
+          onPressed: () {
+            widget.device.removeBond();
+          },
+          child: Text("UnBond"));
+    }
+    if (_bondState == BluetoothBondState.bonding) {
+      return Text("Bonding");
+    }
+    if (_bondState == BluetoothBondState.none) {
+      return ElevatedButton(
+          onPressed: () {
+            widget.device.createBond();
+          },
+          child: Text("Bond"));
+    }
+    return Container();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
@@ -231,7 +264,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.device.platformName),
-          actions: [buildConnectButton(context)],
+          actions: [buildBondAndUnBondButton()],
         ),
         body: SingleChildScrollView(
           child: Column(

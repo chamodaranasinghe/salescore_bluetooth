@@ -1127,10 +1127,10 @@ public class SalescoreBluetoothPlugin implements FlutterPlugin, MethodCallHandle
 
           // check connection
           BluetoothGatt gatt = mConnectedDevices.get(remoteId);
-          if(gatt == null) {
+          /*if(gatt == null) {
             result.error("createBond", "device is disconnected", null);
             break;
-          }
+          }*/
 
           BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(remoteId);
 
@@ -1557,6 +1557,7 @@ public class SalescoreBluetoothPlugin implements FlutterPlugin, MethodCallHandle
 
       scanCallback = new ScanCallback()
       {
+        @SuppressLint("MissingPermission")
         @Override
         public void onScanResult(int callbackType, ScanResult result)
         {
@@ -1566,13 +1567,19 @@ public class SalescoreBluetoothPlugin implements FlutterPlugin, MethodCallHandle
 
           BluetoothDevice device = result.getDevice();
           String remoteId = device.getAddress();
+          //log(LogLevel.INFO,"Bond state: "+device.getName()+" "+bondStateString(device.getBondState()));
+          log(LogLevel.INFO,device.getName()+" "+"device class: "+device.getBluetoothClass().hashCode());
 
           // see BmScanResult
           HashMap<String, Object> sr = bmScanResult(device, result);
 
           // see BmScanResponse
           HashMap<String, Object> response = new HashMap<>();
+
+
           response.put("result", sr);
+
+
 
           invokeMethodUIThread("OnScanResponse", response);
         }
@@ -1962,6 +1969,7 @@ public class SalescoreBluetoothPlugin implements FlutterPlugin, MethodCallHandle
         int key = manufData.keyAt(i);
         byte[] value = manufData.valueAt(i);
         manufDataB.put(key, bytesToHex(value));
+        log(LogLevel.INFO,bytesToHex(value));
       }
     }
 
@@ -1993,11 +2001,18 @@ public class SalescoreBluetoothPlugin implements FlutterPlugin, MethodCallHandle
     return map;
   }
 
+  @SuppressLint("MissingPermission")
   HashMap<String, Object> bmScanResult(BluetoothDevice device, ScanResult result) {
     HashMap<String, Object> map = new HashMap<>();
     map.put("device", bmBluetoothDevice(device));
     map.put("rssi", result.getRssi());
     map.put("advertisement_data", bmAdvertisementData(result));
+    if (device.getBluetoothClass().hashCode() == 263808) {
+      map.put("is_printer", true);
+    }else{
+      map.put("is_printer", false);
+    }
+    map.put("bond_state",bondStateString(device.getBondState()));
     return map;
   }
 
